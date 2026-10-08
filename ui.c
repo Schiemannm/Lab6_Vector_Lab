@@ -39,6 +39,7 @@ void ui_help(void) {
     printf("  clear            erase all stored vectors\n");
     printf("  quit             exit\n");
     printf("Put spaces around =, +, -, *, . and x. Up to %d vectors.\n", MAX_VECTS);
+    printf("WElCOME TO THE MINIMAT VECTOR CALCULATOR! Type 'quit' to exit.\n");
 }
 
 
