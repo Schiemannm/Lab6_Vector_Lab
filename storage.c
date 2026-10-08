@@ -21,6 +21,7 @@ int addvect(vect v) {
         }
     }
     if (empty < 0) {
+        // Extra Random comment to test git diff, this should not be here, but I want to see if it shows up in the diff.
         return -1;
     }          
 

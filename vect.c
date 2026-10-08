@@ -14,6 +14,7 @@ vect add(vect a, vect b) {
     return r;
 
 }
+// This is also an extra comment so that we can play with git
 
 /* Subtract two vectors */
 vect sub(vect a, vect b) {
