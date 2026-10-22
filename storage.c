@@ -14,8 +14,8 @@ int currentMaxCapacity = MAX_VECTS;
 
 int initializeMemory(void) {
     currentMaxCapacity = MAX_VECTS;
-    store = malloc(sizeof(vect) * currentMaxCapacity); // Allocate memory for the store array
-    used = malloc(sizeof(int) * currentMaxCapacity); // Allocate memory for the used array
+    store = malloc(sizeof(vect) * currentMaxCapacity);  // Allocate memory for the store array
+    used = malloc(sizeof(int) * currentMaxCapacity);    // Allocate memory for the used array
     if (store == NULL || used == NULL) { // Check if the allocation was successful
         return -1; // Return -1 if the allocation failed
     }
