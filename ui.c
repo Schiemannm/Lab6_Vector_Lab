@@ -38,6 +38,8 @@ void ui_help(void) {
     printf("  list             show all stored vectors\n");
     printf("  clear            erase all stored vectors\n");
     printf("  quit             exit\n");
+    printf("  save             save vectors to a csv file\n");
+    printf("  load             load vectors from a csv file\n");
     printf("Put spaces around =, +, -, *, . and x. Up to %d vectors.\n", MAX_VECTS);
     printf("WElCOME TO THE MINIMAT VECTOR CALCULATOR! Type 'quit' to exit.\n");
 }
@@ -93,7 +95,8 @@ static int valid_name(const char *s) {
     return strcmp(s, "list") && strcmp(s, "clear") && strcmp(s, "quit");
 }
 
-// Classify an operand: 1 = stored vector (in *v), 2 = number (in *d), 0 = neither
+// Classify an operand
+//  1 = stored vector (in *v), 2 = number (in *d), 0 = neither
 static int operand(const char *tok, vect *v, double *d) {
     if (findvect(tok, v) == 0) {
         return 1;
@@ -104,7 +107,7 @@ static int operand(const char *tok, vect *v, double *d) {
     return 0;
 }
 
-// Returns 0 on success (result filled in), -1 on error (message printed)
+// Returns 0 on success (result filled in), -1 on error (a message is printed)
 static int evaluate(const char *a, char op, const char *b, result *r) {
     vect va, vb;
     double da = 0, db = 0;
@@ -162,7 +165,7 @@ static int evaluate(const char *a, char op, const char *b, result *r) {
 static void store_and_show(const char *name, vect v) {
     strcpy(v.name, name);
     if (addvect(v) != 0) {
-        printf("Error: memory full (%d vectors max). Use 'clear' to free space.\n", MAX_VECTS);
+        printf("Error: memory Problem! %d Max Vects Value", MAX_VECTS);
         return;
     }
     print_vect(name, &v);
@@ -171,13 +174,50 @@ static void store_and_show(const char *name, vect v) {
 static void do_list(void) {
     vect v;
     int count = 0;
-    for (int i = 0; i < MAX_VECTS; i++) {
+    for (int i = 0; i < currentMaxCapacity; i++) {
         if (vect_at(i, &v) == 0) {
             print_vect(v.name, &v);
             count++;
         }
     }
     if (count == 0) printf("No vectors stored.\n");
+}
+
+static int savevects(const char *filename) {
+    char full_path[256];
+    snprintf(full_path, sizeof(full_path), "%s.csv", filename);
+    FILE *f = fopen(full_path, "w");
+
+    if (!f) return -1;
+    vect v;
+    for (int i = 0; i < currentMaxCapacity; i++) {
+        if (vect_at(i, &v) == 0) {
+            fprintf(f, "%s,%g,%g,%g\n", v.name, v.x, v.y, v.z);
+        } else {
+            //DEBUG printf("VECT_AT FAILED!");
+        }
+    }
+    fclose(f);
+    return 0;
+}
+
+static int loadvects(const char *filename) {
+    clearvects();
+    char full_path[256];
+    snprintf(full_path, sizeof(full_path), "%s.csv", filename);
+    FILE *f = fopen(full_path, "r");
+
+    if (!f) return -1;
+    clearvects();
+    char line[LINE_LEN];
+    while (fgets(line, sizeof line, f)) {
+        vect v;
+        if (sscanf(line, "%[^,],%lf,%lf,%lf", v.name, &v.x, &v.y, &v.z) == 4) {
+            addvect(v);
+        }
+    }
+    fclose(f);
+    return 0;
 }
 
 static int handle_line(const char *line) {
@@ -204,11 +244,54 @@ static int handle_line(const char *line) {
         if (strcmp(tok[0], "list") == 0)  { 
             do_list(); 
             return UI_CONTINUE;
-     }
+        }
         if (strcmp(tok[0], "clear") == 0) { 
             clearvects(); 
             printf("Vector memory cleared.\n"); 
             return UI_CONTINUE; 
+        }
+        if (strcmp(tok[0], "save") == 0) {
+            printf("==== VECTOR SAVE ====\n");
+            printf("Please enter File name without extension ex. Vectors\n");
+            char filename[100];
+            scanf("%s", filename);
+            
+            int c;
+            while ((c = getchar()) != '\n' && c != EOF);
+            
+            if (strlen(filename) == 0) {
+                printf("Error: invalid filename.\n");
+                return UI_CONTINUE;
+            } 
+            if (savevects(filename) == 0) {
+                printf("Vectors saved to '%s.csv'.\n", filename);
+            } else {
+                printf("Error: could not save vectors.\n");
+            }
+            return UI_CONTINUE;
+        }
+        if (strcmp(tok[0], "load") == 0) {
+            printf("==== VECTOR LOAD ====\n");
+            printf("Please enter File name without extension ex. Vectors\n");
+            printf("WARNING: Will Clear Program Memory\n");
+            char filename[100];
+            scanf("%s", filename);
+            
+            // NEEDED TO ADD THIS CUZ MY MINIMAT> Chevron would double print
+            // It is cause the newline char wasnt stripped after input. 
+            int c;
+            while ((c = getchar()) != '\n' && c != EOF);
+            
+            if (strlen(filename) == 0) {
+                printf("Error: invalid filename.\n");
+                return UI_CONTINUE;
+            } 
+            if (loadvects(filename) == 0) {
+                printf("Vectors loaded from '%s.csv'.\n", filename);
+            } else {
+                printf("Error: could not load vectors.\n");
+            }
+            return UI_CONTINUE;
         }
         if (findvect(tok[0], &v) == 0) {
             print_vect(v.name, &v);
@@ -285,6 +368,7 @@ static int handle_line(const char *line) {
 }
 
 int ui_run(void) {
+    initializeMemory();
     char line[LINE_LEN];
     while (1) {
         printf("minimat> ");
@@ -296,7 +380,11 @@ int ui_run(void) {
 
         // Looked up how to remove stuff from strings in C
         line[strcspn(line, "\n")] = '\0';
-        if (handle_line(line) == UI_QUIT) break;
+        if (handle_line(line) == UI_QUIT) {
+            freeMemory();
+            break;
+        }
+    
     }
     return 0;
 }
