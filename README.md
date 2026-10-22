@@ -1,8 +1,10 @@
-#### Lab6_Vector_Lab
-## Vector Lab Calculator
-# @Author *Matthew Schiemann*
+### Lab6_Vector_Lab
+# Vector Lab Calculator
+#### @Author *Matthew Schiemann*
 
 This lab is a culmination of Lab 5,6,7, and 8 in which we are using the git repo to demonstrate how we may use and manipulate files in collaboration with others.
+
+ADDED BRANCH to mybranch for some "testing"
 
 <For this program, we have built a vector calculator which allows the input of vectors in the form a = 1 2 3 and allows us to perform multiple operations between vectors and such. Upgrades have been added along the way such as the addition of storage and loading of vectors to CSV files.>
 
